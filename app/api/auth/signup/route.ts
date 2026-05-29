@@ -9,10 +9,18 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const { name, email, password } = body;
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!name || !normalizedEmail || !password) {
+      return NextResponse.json(
+        { error: "Name, email, and password are required" },
+        { status: 400 }
+      );
+    }
 
     await connectDB();
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return NextResponse.json(
@@ -25,8 +33,9 @@ export async function POST(req: Request) {
 
     await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
+      role: "customer",
     });
 
     return NextResponse.json(
